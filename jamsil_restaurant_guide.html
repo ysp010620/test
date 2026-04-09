@@ -94,7 +94,7 @@ var COORDS = {
 };
 
 var NO_MAP = {
-  "카페/음료": [],
+  "카페/음료": ["사사노하카페","페퍼오린지","마운틴누크","라브레드프레스커피","온량코히"],
   "버거/브런치/양식": ["버거파크","조인트"],
   "면류 (한식)": ["필동면옥","황도바지락칼국수","잠실제면소","두레국수","고기리막국수 잠실","광화문미진 잠실"],
   "면류 (라멘)": ["라멘트럭우마이도","유즈라멘"],
@@ -113,7 +113,7 @@ var cur = cats[0];
 var map, markers = [], infowindow;
 
 function naverSearch(name) {
-  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(name), '_blank');
+  window.open('https://search.naver.com/search.naver?query=' + encodeURIComponent(name + ' 잠실'), '_blank');
 }
 
 function initApp() {
