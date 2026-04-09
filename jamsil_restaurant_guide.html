@@ -4,35 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>잠실 식당 가이드</title>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=aq6s5yinev&callback=initApp"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6473f7eead2b22947a0235b62ce16a72&autoload=false"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;height:100vh;display:flex;flex-direction:column}
-.header{padding:1rem 1.5rem 0.75rem;background:#fff;border-bottom:0.5px solid #e0deda;flex-shrink:0}
-.header h1{font-size:15px;font-weight:500;margin-bottom:0.6rem}
-.tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0.6rem}
-.tab{padding:4px 12px;border-radius:20px;border:0.5px solid #ccc;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:0.9rem 1.25rem 0.7rem;background:#fff;border-bottom:0.5px solid #e0deda;flex-shrink:0}
+.header h1{font-size:15px;font-weight:500;margin-bottom:0.55rem}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:0.55rem}
+.tab{padding:4px 11px;border-radius:20px;border:0.5px solid #ccc;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
 .tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .view-btns{display:flex;gap:6px}
 .view-btn{padding:4px 12px;border-radius:6px;border:0.5px solid #e0deda;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
 .view-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .main{flex:1;display:flex;overflow:hidden}
-.list-panel{width:260px;flex-shrink:0;overflow-y:auto;padding:0.75rem;background:#f5f4f0;border-right:0.5px solid #e0deda}
-.card{background:#fff;border:0.5px solid #e0deda;border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:border-color .15s;text-decoration:none;display:block}
+.list-panel{width:240px;flex-shrink:0;overflow-y:auto;padding:0.6rem;background:#f5f4f0;border-right:0.5px solid #e0deda}
+.card{background:#fff;border:0.5px solid #e0deda;border-radius:10px;padding:9px 11px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;text-decoration:none;display:block}
 .card:hover,.card.active{border-color:#1a1a1a}
 .card-name{font-size:13px;font-weight:500;color:#1a1a1a;margin-bottom:3px}
 .card-hint{font-size:11px;color:#aaa}
-.card.no-map .card-hint{color:#e0deda}
-#map{flex:1}
-.map-view .list-panel{display:none}
-.map-view #map{display:block}
+.card.no-map .card-hint{color:#ccc}
+#map{flex:1;background:#e8e8e8}
+.list-view .list-panel{width:100%;border-right:none;overflow-y:auto}
+.list-view .list-panel .inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
+.list-view .list-panel .card{margin-bottom:0}
 .list-view #map{display:none}
-.list-view .list-panel{width:100%;border-right:none}
-.list-view .list-panel .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.popup{position:absolute;z-index:100;background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,.15);min-width:160px;pointer-events:none}
-.popup-name{font-size:14px;font-weight:500;color:#1a1a1a;margin-bottom:4px}
-.popup-hint{font-size:11px;color:#888}
-.popup-link{font-size:11px;color:#03c75a;margin-top:6px;display:block;pointer-events:all;cursor:pointer}
+.map-view #map{display:block}
 </style>
 </head>
 <body>
@@ -45,7 +41,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 <div class="main map-view" id="main">
-  <div class="list-panel" id="listPanel"></div>
+  <div class="list-panel" id="listPanel"><div class="inner" id="listInner"></div></div>
   <div id="map"></div>
 </div>
 
@@ -76,84 +72,82 @@ var NO_MAP = {
   "기타": ["키친205"]
 };
 
-var cats = ["카페/음료","버거/브런치/양식","면류 (한식)","면류 (라멘)","일식","중식/마라","고기/구이","샤브샤브/전골","돈까스/분식","한식","기타 외국식","포차/술집","기타"];
+var cats = Object.keys(Object.assign({}, COORDS, NO_MAP));
+cats = ["카페/음료","버거/브런치/양식","면류 (한식)","면류 (라멘)","일식","중식/마라","고기/구이","샤브샤브/전골","돈까스/분식","한식","기타 외국식","포차/술집","기타"];
+
 var cur = cats[0];
 var viewMode = 'map';
-var map, markers = [];
+var map, markers = [], infowindow;
 
 function initMap() {
-  map = new naver.maps.Map('map', {
-    center: new naver.maps.LatLng(37.5120, 127.1030),
-    zoom: 14,
-    zoomControl: true,
-    zoomControlOptions: { position: naver.maps.Position.TOP_RIGHT }
+  kakao.maps.load(function() {
+    var center = new kakao.maps.LatLng(37.5120, 127.1030);
+    map = new kakao.maps.Map(document.getElementById('map'), {
+      center: center,
+      level: 4
+    });
+    infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+    renderTabs();
+    renderList();
+    renderMarkers();
   });
 }
 
 function clearMarkers() {
-  markers.forEach(function(m){ m.setMap(null); });
+  markers.forEach(function(m) { m.setMap(null); });
   markers = [];
+  if (infowindow) infowindow.close();
 }
 
 function renderMarkers() {
   clearMarkers();
   var places = COORDS[cur] || [];
   if (!places.length) return;
-  var bounds = new naver.maps.LatLngBounds();
+  var bounds = new kakao.maps.LatLngBounds();
   places.forEach(function(p) {
-    var pos = new naver.maps.LatLng(p.lat, p.lng);
-    var marker = new naver.maps.Marker({
-      position: pos,
-      map: map,
-      title: p.name,
-      icon: {
-        content: '<div style="background:#1a1a1a;color:#fff;font-size:11px;font-weight:500;padding:4px 8px;border-radius:20px;white-space:nowrap;cursor:pointer">' + p.name + '</div>',
-        anchor: new naver.maps.Point(0, 0)
-      }
-    });
-    naver.maps.Event.addListener(marker, 'click', function() {
-      map.setCenter(pos);
+    var pos = new kakao.maps.LatLng(p.lat, p.lng);
+    var marker = new kakao.maps.Marker({ position: pos, map: map, title: p.name });
+    kakao.maps.event.addListener(marker, 'click', function() {
+      infowindow.setContent(
+        '<div style="padding:6px 10px;font-size:13px;font-weight:500;white-space:nowrap">' + p.name + '</div>'
+      );
+      infowindow.open(map, marker);
       highlightCard(p.name);
     });
     markers.push(marker);
     bounds.extend(pos);
   });
-  if (places.length > 1) map.fitBounds(bounds, {top:60,right:40,bottom:40,left:40});
-  else map.setCenter(new naver.maps.LatLng(places[0].lat, places[0].lng));
+  if (places.length > 1) map.setBounds(bounds);
+  else map.setCenter(new kakao.maps.LatLng(places[0].lat, places[0].lng));
 }
 
 function highlightCard(name) {
-  var cards = document.querySelectorAll('.card');
-  cards.forEach(function(c){ c.classList.remove('active'); });
-  var target = document.querySelector('[data-name="' + name + '"]');
-  if (target) { target.classList.add('active'); target.scrollIntoView({block:'nearest'}); }
+  document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('active'); });
+  var t = document.querySelector('[data-name="' + name + '"]');
+  if (t) { t.classList.add('active'); t.scrollIntoView({ block: 'nearest' }); }
 }
 
 function renderList() {
-  var el = document.getElementById('listPanel');
   var places = COORDS[cur] || [];
   var nomap = NO_MAP[cur] || [];
   var html = '';
-  if (viewMode === 'list') html += '<div class="card-grid">';
   places.forEach(function(p) {
-    html += '<a class="card" data-name="' + p.name + '" href="https://map.naver.com/v5/search/' + encodeURIComponent(p.name) + '" target="_blank" rel="noopener" onclick="onCardClick(event,\'' + p.name.replace(/'/g,"\\'") + '\',' + p.lat + ',' + p.lng + ')">';
-    html += '<div class="card-name">' + p.name + '</div>';
-    html += '<div class="card-hint">위치 확인됨</div></a>';
+    var esc = p.name.replace(/"/g, '&quot;');
+    html += '<a class="card" data-name="' + esc + '" href="https://map.kakao.com/link/search/' + encodeURIComponent(p.name) + '" target="_blank" rel="noopener" onclick="onCardClick(event,' + p.lat + ',' + p.lng + ',\'' + p.name.replace(/'/g,"\\'") + '\')">';
+    html += '<div class="card-name">' + p.name + '</div><div class="card-hint">위치 확인됨</div></a>';
   });
   nomap.forEach(function(n) {
-    html += '<a class="card no-map" href="https://map.naver.com/v5/search/' + encodeURIComponent(n) + '" target="_blank" rel="noopener">';
-    html += '<div class="card-name">' + n + '</div>';
-    html += '<div class="card-hint">네이버 지도에서 보기</div></a>';
+    html += '<a class="card no-map" href="https://map.kakao.com/link/search/' + encodeURIComponent(n) + '" target="_blank" rel="noopener">';
+    html += '<div class="card-name">' + n + '</div><div class="card-hint">카카오 지도에서 보기</div></a>';
   });
-  if (viewMode === 'list') html += '</div>';
-  el.innerHTML = html;
+  document.getElementById('listInner').innerHTML = html;
 }
 
-function onCardClick(e, name, lat, lng) {
-  if (viewMode !== 'map' || !COORDS[cur]) return;
+function onCardClick(e, lat, lng, name) {
+  if (viewMode !== 'map') return;
   e.preventDefault();
-  map.setCenter(new naver.maps.LatLng(lat, lng));
-  map.setZoom(17);
+  map.setCenter(new kakao.maps.LatLng(lat, lng));
+  map.setLevel(3);
   highlightCard(name);
 }
 
@@ -164,7 +158,7 @@ function renderTabs() {
     var b = document.createElement('button');
     b.className = 'tab' + (c === cur ? ' active' : '');
     b.textContent = c;
-    b.onclick = function() { cur = c; renderTabs(); renderList(); if(viewMode==='map') renderMarkers(); };
+    b.onclick = function() { cur = c; renderTabs(); renderList(); if (viewMode === 'map') renderMarkers(); };
     el.appendChild(b);
   });
 }
@@ -173,18 +167,15 @@ function setView(v) {
   viewMode = v;
   var main = document.getElementById('main');
   main.className = 'main ' + v + '-view';
-  document.getElementById('btnMap').className = 'view-btn' + (v==='map'?' active':'');
-  document.getElementById('btnList').className = 'view-btn' + (v==='list'?' active':'');
+  document.getElementById('btnMap').className = 'view-btn' + (v === 'map' ? ' active' : '');
+  document.getElementById('btnList').className = 'view-btn' + (v === 'list' ? ' active' : '');
+  var lp = document.getElementById('listPanel');
+  lp.style.width = v === 'list' ? '100%' : '240px';
   renderList();
-  if (v === 'map') renderMarkers();
+  if (v === 'map' && map) renderMarkers();
 }
 
-function initApp() {
-  initMap();
-  renderTabs();
-  renderList();
-  renderMarkers();
-}
+window.onload = initMap;
 </script>
 </body>
 </html>
