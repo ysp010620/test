@@ -10,38 +10,28 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .header{padding:0.9rem 1.25rem 0.7rem;background:#fff;border-bottom:0.5px solid #e0deda;flex-shrink:0}
 .header h1{font-size:15px;font-weight:500;margin-bottom:0.55rem}
-.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:0.55rem}
+.tabs{display:flex;flex-wrap:wrap;gap:4px}
 .tab{padding:4px 11px;border-radius:20px;border:0.5px solid #ccc;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
 .tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.view-btns{display:flex;gap:6px}
-.view-btn{padding:4px 12px;border-radius:6px;border:0.5px solid #e0deda;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
-.view-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .main{flex:1;display:flex;overflow:hidden}
-.list-panel{width:240px;flex-shrink:0;overflow-y:auto;padding:0.6rem;background:#f5f4f0;border-right:0.5px solid #e0deda}
+.list-panel{width:230px;flex-shrink:0;overflow-y:auto;padding:0.6rem;background:#f5f4f0;border-right:0.5px solid #e0deda}
 .card{background:#fff;border:0.5px solid #e0deda;border-radius:10px;padding:9px 11px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;text-decoration:none;display:block}
-.card:hover,.card.active{border-color:#1a1a1a}
+.card:hover{border-color:#888}
+.card.active{border-color:#1a1a1a}
 .card-name{font-size:13px;font-weight:500;color:#1a1a1a;margin-bottom:3px}
-.card-hint{font-size:11px;color:#aaa}
-.card.no-map .card-hint{color:#ccc}
-#map{flex:1;background:#e8e8e8}
-.list-view .list-panel{width:100%;border-right:none;overflow-y:auto}
-.list-view .list-panel .inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
-.list-view .list-panel .card{margin-bottom:0}
-.list-view #map{display:none}
-.map-view #map{display:block}
+.card-sub{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px}
+.dot-green{width:6px;height:6px;border-radius:50%;background:#03c75a;flex-shrink:0}
+.dot-gray{width:6px;height:6px;border-radius:50%;background:#ccc;flex-shrink:0}
+#map{flex:1}
 </style>
 </head>
 <body>
 <div class="header">
   <h1>잠실 식당 가이드</h1>
   <div class="tabs" id="tabs"></div>
-  <div class="view-btns">
-    <button class="view-btn active" id="btnMap" onclick="setView('map')">지도 보기</button>
-    <button class="view-btn" id="btnList" onclick="setView('list')">목록 보기</button>
-  </div>
 </div>
-<div class="main map-view" id="main">
-  <div class="list-panel" id="listPanel"><div class="inner" id="listInner"></div></div>
+<div class="main">
+  <div class="list-panel" id="listPanel"></div>
   <div id="map"></div>
 </div>
 
@@ -53,37 +43,83 @@ var COORDS = {
     {name:"폴바셋 잠실", lat:37.5120835, lng:127.0984593},
     {name:"스타벅스 리저브 잠실", lat:37.5154847, lng:127.0990555},
     {name:"블루보틀 잠실", lat:37.513397, lng:127.1034949}
+  ],
+  "버거/브런치/양식": [
+    {name:"다운타우너 잠실", lat:37.5090459, lng:127.1106549},
+    {name:"브루클린더버거", lat:37.5136425, lng:127.1042026},
+    {name:"쉐이크쉑 잠실", lat:37.5142345, lng:127.1002688},
+    {name:"고든램지버거", lat:37.513217, lng:127.1015777},
+    {name:"더플레이스 잠실", lat:37.5121524, lng:127.0996569},
+    {name:"빌즈 잠실", lat:37.5131946, lng:127.1038462},
+    {name:"피에프창 잠실", lat:37.513496, lng:127.1034208}
+  ],
+  "면류 (한식)": [],
+  "면류 (라멘)": [
+    {name:"멘야하나비", lat:37.5109648, lng:127.1077883},
+    {name:"오레노라멘", lat:37.5133082, lng:127.1039549},
+    {name:"팔각동칼누들바", lat:37.5140087, lng:127.1097565}
+  ],
+  "일식": [
+    {name:"갓덴스시", lat:37.5137441, lng:127.1033483}
+  ],
+  "중식/마라": [
+    {name:"라화쿵부 잠실", lat:37.5115717, lng:127.0964386},
+    {name:"홍콩반점 잠실", lat:37.510749, lng:127.0799793}
+  ],
+  "고기/구이": [
+    {name:"이춘복참치 잠실", lat:37.514297, lng:127.1007154}
+  ],
+  "샤브샤브/전골": [
+    {name:"방이샤브샤브", lat:37.5113924, lng:127.1269161},
+    {name:"샤브로21", lat:37.5108135, lng:127.108738}
+  ],
+  "돈까스/분식": [
+    {name:"돈까스의집 잠실", lat:37.506963, lng:127.0906578}
+  ],
+  "한식": [
+    {name:"봉피양 잠실", lat:37.5120828, lng:127.0981034},
+    {name:"강강술래 잠실", lat:37.5120162, lng:127.0992764},
+    {name:"삼백집 잠실", lat:37.5078983, lng:127.1033689},
+    {name:"백채김치찌개", lat:37.509862, lng:127.0795489}
+  ],
+  "포차/술집": [
+    {name:"신천포차", lat:37.5092926, lng:127.0855566},
+    {name:"생활맥주 잠실", lat:37.5176345, lng:127.1012773},
+    {name:"미도인", lat:37.5102602, lng:127.1083302}
+  ],
+  "기타": [
+    {name:"팀호완 잠실", lat:37.5121155, lng:127.0994410},
+    {name:"키친205", lat:37.5140284, lng:127.1045496}
   ]
 };
 
 var NO_MAP = {
   "카페/음료": [],
-  "버거/브런치/양식": ["다운타우너 잠실","버거파크","브루클린더버거","조인트","쉐이크쉑 잠실","고든램지버거 롯데월드몰","더플레이스 잠실","빌즈 잠실","피에프창 잠실"],
+  "버거/브런치/양식": ["버거파크","조인트"],
   "면류 (한식)": ["필동면옥","황도바지락칼국수","잠실제면소","두레국수","고기리막국수 잠실","광화문미진 잠실"],
-  "면류 (라멘)": ["멘야하나비","라멘트럭우마이도","유즈라멘","오레노라멘","팔각동칼누들바 방이본점"],
-  "일식": ["스시노칸도","갓덴스시","잇쇼니야키토리","잔잔토리","키조쿠규카츠","정이자카야 나무","코다차야 잠실"],
-  "중식/마라": ["홍콩반점 잠실","마라공방","라화쿵부","하이디라오 잠실","샤오바오우육면"],
-  "고기/구이": ["루어니언 잠실","미트컬처","마포갈매기 잠실","육전식당 잠실","한와담","이춘복참치 잠실","송리단길 고깃집"],
-  "샤브샤브/전골": ["방이샤브샤브","샤브로21","방이옥"],
-  "돈까스/분식": ["돈까스의집 잠실","고봉민김밥 잠실"],
-  "한식": ["서래향","청화집","백채김치찌개","송계옥","서울깍두기","강강술래 잠실","봉피양 잠실","삼백집 잠실","경천애인","2237","정돈 잠실"],
-  "기타 외국식": ["유한 태국음식","온더보더 잠실","팀호완 잠실"],
-  "포차/술집": ["신천포차","잠실포차","미도인","생활맥주 잠실","크래프트한스 잠실"],
-  "기타": ["키친205"]
+  "면류 (라멘)": ["라멘트럭우마이도","유즈라멘"],
+  "일식": ["스시노칸도","잇쇼니야키토리","잔잔토리","키조쿠규카츠","정이자카야 나무","코다차야 잠실"],
+  "중식/마라": ["하이디라오 잠실","마라공방","샤오바오우육면"],
+  "고기/구이": ["루어니언 잠실","미트컬처","마포갈매기 잠실","육전식당 잠실","한와담","송리단길 고깃집"],
+  "샤브샤브/전골": ["방이옥"],
+  "돈까스/분식": ["고봉민김밥 잠실"],
+  "한식": ["서래향","청화집","송계옥","서울깍두기","경천애인","2237","정돈 잠실"],
+  "포차/술집": ["잠실포차","크래프트한스 잠실"],
+  "기타": ["유한 (태국음식)","온더보더 잠실"]
 };
 
-var cats = Object.keys(Object.assign({}, COORDS, NO_MAP));
-cats = ["카페/음료","버거/브런치/양식","면류 (한식)","면류 (라멘)","일식","중식/마라","고기/구이","샤브샤브/전골","돈까스/분식","한식","기타 외국식","포차/술집","기타"];
-
+var cats = ["카페/음료","버거/브런치/양식","면류 (한식)","면류 (라멘)","일식","중식/마라","고기/구이","샤브샤브/전골","돈까스/분식","한식","포차/술집","기타"];
 var cur = cats[0];
-var viewMode = 'map';
 var map, markers = [], infowindow;
 
-function initMap() {
+function naverSearch(name) {
+  window.open('https://map.naver.com/v5/search/' + encodeURIComponent(name), '_blank');
+}
+
+function initApp() {
   kakao.maps.load(function() {
-    var center = new kakao.maps.LatLng(37.5120, 127.1030);
     map = new kakao.maps.Map(document.getElementById('map'), {
-      center: center,
+      center: new kakao.maps.LatLng(37.5120, 127.1030),
       level: 4
     });
     infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
@@ -109,7 +145,8 @@ function renderMarkers() {
     var marker = new kakao.maps.Marker({ position: pos, map: map, title: p.name });
     kakao.maps.event.addListener(marker, 'click', function() {
       infowindow.setContent(
-        '<div style="padding:6px 10px;font-size:13px;font-weight:500;white-space:nowrap">' + p.name + '</div>'
+        '<div style="padding:6px 10px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer" onclick="naverSearch(\'' + p.name.replace(/'/g,"\\'") + '\')">' +
+        p.name + ' <span style="font-size:11px;color:#03c75a">네이버 검색 ↗</span></div>'
       );
       infowindow.open(map, marker);
       highlightCard(p.name);
@@ -118,12 +155,12 @@ function renderMarkers() {
     bounds.extend(pos);
   });
   if (places.length > 1) map.setBounds(bounds);
-  else map.setCenter(new kakao.maps.LatLng(places[0].lat, places[0].lng));
+  else { map.setCenter(new kakao.maps.LatLng(places[0].lat, places[0].lng)); map.setLevel(4); }
 }
 
 function highlightCard(name) {
   document.querySelectorAll('.card').forEach(function(c) { c.classList.remove('active'); });
-  var t = document.querySelector('[data-name="' + name + '"]');
+  var t = document.querySelector('[data-name="' + name.replace(/"/g,'&quot;') + '"]');
   if (t) { t.classList.add('active'); t.scrollIntoView({ block: 'nearest' }); }
 }
 
@@ -131,21 +168,28 @@ function renderList() {
   var places = COORDS[cur] || [];
   var nomap = NO_MAP[cur] || [];
   var html = '';
+
   places.forEach(function(p) {
-    var esc = p.name.replace(/"/g, '&quot;');
-    html += '<a class="card" data-name="' + esc + '" href="https://map.kakao.com/link/search/' + encodeURIComponent(p.name) + '" target="_blank" rel="noopener" onclick="onCardClick(event,' + p.lat + ',' + p.lng + ',\'' + p.name.replace(/'/g,"\\'") + '\')">';
-    html += '<div class="card-name">' + p.name + '</div><div class="card-hint">위치 확인됨</div></a>';
+    var esc = p.name.replace(/"/g,'&quot;');
+    var nameEsc = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html += '<div class="card" data-name="' + esc + '" onclick="onCardClick(' + p.lat + ',' + p.lng + ',\'' + nameEsc + '\')">';
+    html += '<div class="card-name">' + p.name + '</div>';
+    html += '<div class="card-sub"><span class="dot-green"></span>위치 확인 · <span onclick="event.stopPropagation();naverSearch(\'' + nameEsc + '\')" style="color:#03c75a;cursor:pointer">네이버 검색 ↗</span></div>';
+    html += '</div>';
   });
+
   nomap.forEach(function(n) {
-    html += '<a class="card no-map" href="https://map.kakao.com/link/search/' + encodeURIComponent(n) + '" target="_blank" rel="noopener">';
-    html += '<div class="card-name">' + n + '</div><div class="card-hint">카카오 지도에서 보기</div></a>';
+    var nEsc = n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html += '<div class="card" onclick="naverSearch(\'' + nEsc + '\')">';
+    html += '<div class="card-name">' + n + '</div>';
+    html += '<div class="card-sub"><span class="dot-gray"></span>네이버 검색 ↗</div>';
+    html += '</div>';
   });
-  document.getElementById('listInner').innerHTML = html;
+
+  document.getElementById('listPanel').innerHTML = html;
 }
 
-function onCardClick(e, lat, lng, name) {
-  if (viewMode !== 'map') return;
-  e.preventDefault();
+function onCardClick(lat, lng, name) {
   map.setCenter(new kakao.maps.LatLng(lat, lng));
   map.setLevel(3);
   highlightCard(name);
@@ -158,24 +202,12 @@ function renderTabs() {
     var b = document.createElement('button');
     b.className = 'tab' + (c === cur ? ' active' : '');
     b.textContent = c;
-    b.onclick = function() { cur = c; renderTabs(); renderList(); if (viewMode === 'map') renderMarkers(); };
+    b.onclick = function() { cur = c; renderTabs(); renderList(); renderMarkers(); };
     el.appendChild(b);
   });
 }
 
-function setView(v) {
-  viewMode = v;
-  var main = document.getElementById('main');
-  main.className = 'main ' + v + '-view';
-  document.getElementById('btnMap').className = 'view-btn' + (v === 'map' ? ' active' : '');
-  document.getElementById('btnList').className = 'view-btn' + (v === 'list' ? ' active' : '');
-  var lp = document.getElementById('listPanel');
-  lp.style.width = v === 'list' ? '100%' : '240px';
-  renderList();
-  if (v === 'map' && map) renderMarkers();
-}
-
-window.onload = initMap;
+window.onload = initApp;
 </script>
 </body>
 </html>
