@@ -7,54 +7,90 @@
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6473f7eead2b22947a0235b62ce16a72&autoload=false"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.header{padding:0.8rem 1rem 0.6rem;background:#fff;border-bottom:0.5px solid #e0deda;flex-shrink:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;height:100vh;overflow:hidden;position:relative}
+
+/* 지도 전체화면 */
+#map{position:absolute;inset:0;width:100%;height:100%}
+
+/* 헤더 (지도 위 플로팅) */
+.header{position:absolute;top:0;left:0;right:0;z-index:10;background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);padding:0.75rem 1rem 0.6rem;border-bottom:0.5px solid #e0deda}
 .header h1{font-size:15px;font-weight:500;margin-bottom:0.5rem}
 .tabs{display:flex;flex-wrap:wrap;gap:4px}
 .tab{padding:4px 10px;border-radius:20px;border:0.5px solid #ccc;font-size:12px;cursor:pointer;background:#fff;color:#666;font-family:inherit;transition:all .15s}
 .tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 
-/* 데스크탑: 좌우 */
-.main{flex:1;display:flex;overflow:hidden}
-.list-panel{width:240px;flex-shrink:0;overflow-y:auto;padding:0.6rem;background:#f5f4f0;border-right:0.5px solid #e0deda}
-#map{flex:1}
+/* 데스크탑: 왼쪽 패널 */
+.sidebar{position:absolute;top:0;left:0;bottom:0;width:260px;z-index:20;background:#fff;border-right:0.5px solid #e0deda;display:flex;flex-direction:column}
+.sidebar-header{padding:0.75rem 1rem 0.6rem;border-bottom:0.5px solid #e0deda;flex-shrink:0}
+.sidebar-header h1{font-size:15px;font-weight:500;margin-bottom:0.5rem}
+.sidebar-list{flex:1;overflow-y:auto;padding:0.6rem}
 
-/* 카드 */
+/* 모바일 바텀시트 */
+.bottom-sheet{position:absolute;left:0;right:0;bottom:0;z-index:20;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -2px 16px rgba(0,0,0,.1);transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
+.sheet-handle-wrap{padding:10px 0 6px;cursor:grab;text-align:center}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:#ddd;display:inline-block}
+.sheet-tabs{padding:0 1rem 0.6rem;border-bottom:0.5px solid #f0efec}
+.sheet-list{overflow-y:auto;padding:0.6rem}
+
+/* 카드 공통 */
 .card{background:#fff;border:0.5px solid #e0deda;border-radius:10px;margin-bottom:6px;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .card:hover{border-color:#bbb}
 .card.active{border-color:#1a1a1a}
-.card-head{padding:9px 11px;display:flex;align-items:center;justify-content:space-between}
+.card-head{padding:10px 12px;display:flex;align-items:center;justify-content:space-between}
+.card-left{flex:1;min-width:0}
 .card-name{font-size:13px;font-weight:500;color:#1a1a1a}
 .card-dot-row{display:flex;align-items:center;gap:4px;margin-top:3px}
 .dot-green{width:6px;height:6px;border-radius:50%;background:#03c75a;flex-shrink:0}
 .dot-gray{width:6px;height:6px;border-radius:50%;background:#ccc;flex-shrink:0}
 .card-sub{font-size:11px;color:#aaa}
-.card-arrow{font-size:11px;color:#ccc;transition:transform .2s;flex-shrink:0}
+.card-arrow{font-size:10px;color:#ccc;transition:transform .2s;margin-left:8px;flex-shrink:0}
 .card.open .card-arrow{transform:rotate(180deg)}
-.card-body{display:none;padding:0 11px 10px;border-top:0.5px solid #f0efec}
+.card-body{display:none;padding:0 12px 12px;border-top:0.5px solid #f5f4f0}
 .card.open .card-body{display:block}
-.info-row{display:flex;gap:6px;margin-top:7px;font-size:12px;line-height:1.5}
-.info-label{color:#aaa;flex-shrink:0;width:44px}
-.info-val{color:#1a1a1a}
-.naver-btn{display:inline-block;margin-top:9px;font-size:11px;color:#03c75a;cursor:pointer;text-decoration:none}
-.preparing{font-size:12px;color:#aaa;margin-top:7px}
+.info-row{display:flex;gap:8px;margin-top:8px;font-size:12px;line-height:1.6}
+.info-label{color:#aaa;flex-shrink:0;width:46px}
+.info-val{color:#333}
+.naver-btn{display:inline-block;margin-top:10px;font-size:12px;color:#03c75a;cursor:pointer;font-weight:500}
+.preparing{font-size:12px;color:#aaa;margin-top:8px;line-height:1.6}
 
-/* 모바일: 위아래 */
+/* 반응형 분기 */
+@media(min-width:641px){
+  .header{display:none}
+  .bottom-sheet{display:none}
+  #map{left:260px}
+}
 @media(max-width:640px){
-  .main{flex-direction:column}
-  #map{flex:none;height:42vh}
-  .list-panel{width:100%;border-right:none;border-top:0.5px solid #e0deda;flex:1;overflow-y:auto}
+  .sidebar{display:none}
+  .header{display:block}
 }
 </style>
 </head>
 <body>
+
+<!-- 지도 -->
+<div id="map"></div>
+
+<!-- 데스크탑 사이드바 -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>잠실 식당 가이드</h1>
+    <div class="tabs" id="tabs-desktop"></div>
+  </div>
+  <div class="sidebar-list" id="list-desktop"></div>
+</div>
+
+<!-- 모바일 헤더 (탭 없음, 타이틀만) -->
 <div class="header">
   <h1>잠실 식당 가이드</h1>
-  <div class="tabs" id="tabs"></div>
 </div>
-<div class="main">
-  <div class="list-panel" id="listPanel"></div>
-  <div id="map"></div>
+
+<!-- 모바일 바텀시트 -->
+<div class="bottom-sheet" id="sheet">
+  <div class="sheet-handle-wrap" id="sheetHandle">
+    <span class="sheet-handle"></span>
+  </div>
+  <div class="sheet-tabs" id="tabs-mobile"></div>
+  <div class="sheet-list" id="list-mobile"></div>
 </div>
 
 <script>
@@ -72,7 +108,7 @@ var DATA = {
       {name:"블루보틀 잠실", lat:37.513397, lng:127.1034949,
        addr:"송파구 올림픽로 300, 롯데월드몰 1층", hours:"매일 10:30 – 22:00", menu:"라떼, 드립커피, 뉴올리언스 라떼"}
     ],
-    unconfirmed: ["사사노하카페","페퍼오린지","마운틴누크","라브레드프레스커피","온량코히"]
+    unconfirmed:["사사노하카페","페퍼오린지","마운틴누크","라브레드프레스커피","온량코히"]
   },
   "버거/브런치/양식": {
     confirmed: [
@@ -91,100 +127,154 @@ var DATA = {
       {name:"피에프창 잠실", lat:37.513496, lng:127.1034208,
        addr:"송파구 올림픽로 300, 롯데월드몰", hours:"매일 10:30 – 22:00", menu:"레터스랩, 몽골리안비프, 핫앤사워수프"}
     ],
-    unconfirmed: ["버거파크","조인트"]
+    unconfirmed:["버거파크","조인트"]
   },
   "면류 (한식)": {
-    confirmed: [],
-    unconfirmed: ["필동면옥","황도바지락칼국수","잠실제면소","두레국수","고기리막국수 잠실","광화문미진 잠실"]
+    confirmed:[],
+    unconfirmed:["필동면옥","황도바지락칼국수","잠실제면소","두레국수","고기리막국수 잠실","광화문미진 잠실"]
   },
   "면류 (라멘)": {
-    confirmed: [
+    confirmed:[
       {name:"멘야하나비", lat:37.5109648, lng:127.1077883,
        addr:"송파구 백제고분로45길 38 (송리단길)", hours:"화-일 11:30–14:30, 17:30–21:00 / 월 휴무", menu:"나고야마제소바, 시오마제소바, 카라마제소바"},
       {name:"오레노라멘", lat:37.5133082, lng:127.1039549,
-       addr:"송파구 올림픽로 300, 롯데월드몰 5층", hours:"매일 10:30 – 21:30", menu:"치킨라멘 (스파이시/논스파이시), 계란토핑"},
+       addr:"송파구 올림픽로 300, 롯데월드몰 5층", hours:"매일 10:30 – 21:30", menu:"치킨라멘 (스파이시/논스파이시)"},
       {name:"팔각동칼누들바", lat:37.5140087, lng:127.1097565,
-       addr:"송파구 방이동 61 (방이본점)", hours:"매일 11:00 – 06:00", menu:"칼국수, 볶음밥, 사이드 안주류"}
+       addr:"송파구 방이동 61 (방이본점)", hours:"매일 11:00 – 06:00", menu:"칼국수, 볶음밥, 안주류"}
     ],
-    unconfirmed: ["라멘트럭우마이도","유즈라멘"]
+    unconfirmed:["라멘트럭우마이도","유즈라멘"]
   },
   "일식": {
-    confirmed: [
+    confirmed:[
       {name:"갓덴스시", lat:37.5137441, lng:127.1033483,
        addr:"송파구 올림픽로 300, 롯데월드몰 5층", hours:"매일 10:30 – 21:30", menu:"회전초밥, 세트초밥, 특선롤"}
     ],
-    unconfirmed: ["스시노칸도","잇쇼니야키토리","잔잔토리","키조쿠규카츠","정이자카야 나무","코다차야 잠실"]
+    unconfirmed:["스시노칸도","잇쇼니야키토리","잔잔토리","키조쿠규카츠","정이자카야 나무","코다차야 잠실"]
   },
   "중식/마라": {
-    confirmed: [
+    confirmed:[
       {name:"라화쿵부 잠실", lat:37.5115717, lng:127.0964386,
        addr:"송파구 올림픽로 240, 롯데마트 잠실점 6층", hours:"매일 11:00 – 21:00", menu:"마라탕, 마라샹궈, 꼬치"},
       {name:"홍콩반점 잠실", lat:37.510749, lng:127.0799793,
-       addr:"송파구 올림픽로8길 10, 2층 (잠실새내)", hours:"매일 11:00 – 21:00", menu:"짬뽕, 짜장면, 탕수육, 차돌짬뽕"}
+       addr:"송파구 올림픽로8길 10, 2층 (잠실새내)", hours:"매일 11:00 – 21:00", menu:"짬뽕, 짜장면, 탕수육"}
     ],
-    unconfirmed: ["하이디라오 잠실","마라공방","샤오바오우육면"]
+    unconfirmed:["하이디라오 잠실","마라공방","샤오바오우육면"]
   },
   "고기/구이": {
-    confirmed: [
+    confirmed:[
       {name:"이춘복참치 잠실", lat:37.514297, lng:127.1007154,
-       addr:"송파구 올림픽로 269, 2층", hours:"매일 11:00–14:30, 16:30–01:00 / 일요일 ~24:00", menu:"참치회, 일품참치세트, 뱃살구이"}
+       addr:"송파구 올림픽로 269, 2층", hours:"매일 11:00–14:30, 16:30–01:00", menu:"참치회, 일품참치세트, 뱃살구이"}
     ],
-    unconfirmed: ["루어니언 잠실","미트컬처","마포갈매기 잠실","육전식당 잠실","한와담","송리단길 고깃집"]
+    unconfirmed:["루어니언 잠실","미트컬처","마포갈매기 잠실","육전식당 잠실","한와담","송리단길 고깃집"]
   },
   "샤브샤브/전골": {
-    confirmed: [
+    confirmed:[
       {name:"방이샤브샤브", lat:37.5113924, lng:127.1269161,
-       addr:"송파구 양재대로71길 2-27 (방이동 본점)", hours:"월·화·수·금·토 11:00–21:30 / 목·일 휴무", menu:"샤브샤브, 잔칼국수, 볶음밥 3코스"},
+       addr:"송파구 양재대로71길 2-27 (방이동 본점)", hours:"월·화·수·금·토 11:00–21:30 / 목·일 휴무", menu:"샤브샤브, 칼국수, 볶음밥 3코스"},
       {name:"샤브로21", lat:37.5108135, lng:127.108738,
        addr:"송파구 오금로16길 10, 1층 (송리단길)", hours:"매일 11:00 – 22:00", menu:"1인 샤브샤브, 스키야키, 우동"}
     ],
-    unconfirmed: ["방이옥"]
+    unconfirmed:["방이옥"]
   },
   "돈까스/분식": {
-    confirmed: [
+    confirmed:[
       {name:"돈까스의집 잠실", lat:37.506963, lng:127.0906578,
        addr:"송파구 삼전로 100", hours:"매일 11:00 – 22:00", menu:"수제돈까스, 함박스테이크, 치즈돈까스"}
     ],
-    unconfirmed: ["고봉민김밥 잠실"]
+    unconfirmed:["고봉민김밥 잠실"]
   },
   "한식": {
-    confirmed: [
+    confirmed:[
       {name:"봉피양 잠실", lat:37.5120828, lng:127.0981034,
        addr:"롯데백화점 잠실점 내", hours:"매일 10:30 – 20:00", menu:"평양냉면, 온반, 보쌈"},
       {name:"강강술래 잠실", lat:37.5120162, lng:127.0992764,
-       addr:"롯데백화점 잠실점 지하 1층", hours:"매일 10:30 – 20:00 (금·토 ~20:30)", menu:"갈비탕, 냉면, 불고기"},
+       addr:"롯데백화점 잠실점 지하 1층", hours:"매일 10:30–20:00 (금·토 ~20:30)", menu:"갈비탕, 냉면, 불고기"},
       {name:"삼백집 잠실", lat:37.5078983, lng:127.1033689,
        addr:"송파구 석촌동 183-9", hours:"매일 06:30 – 23:00", menu:"콩나물국밥, 순두부찌개, 황태해장국"},
       {name:"백채김치찌개", lat:37.509862, lng:127.0795489,
        addr:"송파구 백제고분로7길 6-15 (잠실새내)", hours:"월-토 11:00–21:00 / 일 휴무", menu:"김치찌개, 제육볶음, 된장찌개"}
     ],
-    unconfirmed: ["서래향","청화집","송계옥","서울깍두기","경천애인","2237","정돈 잠실"]
+    unconfirmed:["서래향","청화집","송계옥","서울깍두기","경천애인","2237","정돈 잠실"]
   },
   "포차/술집": {
-    confirmed: [
+    confirmed:[
       {name:"신천포차", lat:37.5092926, lng:127.0855566,
-       addr:"송파구 석촌호수로12길 8 (잠실동)", hours:"화-토 16:30–01:30 / 월·일 휴무", menu:"오징어회, 해산물, 김치전, 소주"},
+       addr:"송파구 석촌호수로12길 8 (잠실동)", hours:"화-토 16:30–01:30 / 월·일 휴무", menu:"오징어회, 해산물, 김치전"},
       {name:"생활맥주 잠실", lat:37.5176345, lng:127.1012773,
-       addr:"송파구 올림픽로35길 112, 1층 (잠실장미)", hours:"매일 12:00 – 24:00", menu:"수제맥주, 치킨, 피자, 스낵"},
+       addr:"송파구 올림픽로35길 112, 1층", hours:"매일 12:00 – 24:00", menu:"수제맥주, 치킨, 피자"},
       {name:"미도인", lat:37.5102602, lng:127.1083302,
        addr:"송파구 백제고분로45길 29 (송리단길)", hours:"매일 11:30 – 21:00", menu:"파스타, 스테이크세트, 리조또"}
     ],
-    unconfirmed: ["잠실포차","크래프트한스 잠실"]
+    unconfirmed:["잠실포차","크래프트한스 잠실"]
   },
   "기타": {
-    confirmed: [
-      {name:"팀호완 잠실", lat:37.5121155, lng:127.0994410,
+    confirmed:[
+      {name:"팀호완 잠실", lat:37.5121155, lng:127.099441,
        addr:"롯데백화점 잠실점 2층", hours:"매일 10:30 – 20:00", menu:"차슈바오, 딤섬 세트, 완탄면"},
       {name:"키친205", lat:37.5140284, lng:127.1045496,
        addr:"송파구 올림픽로 300, 롯데월드몰", hours:"매일 10:30 – 22:00", menu:"딸기케이크, 시즌케이크, 커피"}
     ],
-    unconfirmed: ["유한 (태국음식)","온더보더 잠실"]
+    unconfirmed:["유한 (태국음식)","온더보더 잠실"]
   }
 };
 
 var cats = Object.keys(DATA);
 var cur = cats[0];
-var map, markers = [], infowindow, openCard = null;
+var map, markers = [], infowindow;
+var isMobile = window.innerWidth <= 640;
+
+// 바텀시트 드래그
+var sheet, sheetListEl, sheetMaxH, sheetMidH, sheetMinH;
+var dragging = false, startY = 0, startTop = 0;
+
+function initSheet() {
+  sheet = document.getElementById('sheet');
+  sheetListEl = document.getElementById('list-mobile');
+  var vh = window.innerHeight;
+  sheetMinH = 60;
+  sheetMidH = Math.round(vh * 0.45);
+  sheetMaxH = Math.round(vh * 0.82);
+  setSheetH(sheetMidH);
+
+  var handle = document.getElementById('sheetHandle');
+  handle.addEventListener('touchstart', onTouchStart, {passive:true});
+  handle.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('touchmove', onTouchMove, {passive:false});
+  document.addEventListener('touchend', onTouchEnd);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+function setSheetH(h) {
+  sheet.style.height = h + 'px';
+  sheetListEl.style.height = (h - 110) + 'px';
+}
+
+function snapSheet(currentH) {
+  var mid = (sheetMinH + sheetMidH) / 2;
+  var top = (sheetMidH + sheetMaxH) / 2;
+  if (currentH < mid) setSheetH(sheetMinH);
+  else if (currentH < top) setSheetH(sheetMidH);
+  else setSheetH(sheetMaxH);
+}
+
+function onTouchStart(e) { dragging = true; startY = e.touches[0].clientY; startTop = sheet.offsetHeight; }
+function onMouseDown(e) { dragging = true; startY = e.clientY; startTop = sheet.offsetHeight; }
+function onTouchMove(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var dy = startY - e.touches[0].clientY;
+  var newH = Math.min(sheetMaxH, Math.max(sheetMinH, startTop + dy));
+  setSheetH(newH);
+}
+function onMouseMove(e) {
+  if (!dragging) return;
+  var dy = startY - e.clientY;
+  var newH = Math.min(sheetMaxH, Math.max(sheetMinH, startTop + dy));
+  setSheetH(newH);
+}
+function onTouchEnd(e) { if (dragging) { dragging = false; snapSheet(sheet.offsetHeight); } }
+function onMouseUp() { if (dragging) { dragging = false; snapSheet(sheet.offsetHeight); } }
 
 function naverSearch(name) {
   window.open('https://search.naver.com/search.naver?query=' + encodeURIComponent(name + ' 잠실'), '_blank');
@@ -197,6 +287,7 @@ function initApp() {
       level: 4
     });
     infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+    if (isMobile) initSheet();
     renderTabs();
     renderList();
     renderMarkers();
@@ -229,81 +320,87 @@ function renderMarkers() {
   else { map.setCenter(new kakao.maps.LatLng(places[0].lat, places[0].lng)); map.setLevel(4); }
 }
 
-function toggleCard(name, fromMarker) {
-  var el = document.querySelector('[data-name="' + name.replace(/"/g,'&quot;') + '"]');
-  if (!el) return;
-  var isOpen = el.classList.contains('open');
-  document.querySelectorAll('.card.open').forEach(function(c) { c.classList.remove('open','active'); });
-  if (!isOpen) {
-    el.classList.add('open','active');
-    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    if (fromMarker) return;
-    var lat = el.getAttribute('data-lat');
-    var lng = el.getAttribute('data-lng');
-    if (lat && lng) {
-      map.setCenter(new kakao.maps.LatLng(parseFloat(lat), parseFloat(lng)));
-      map.setLevel(3);
-    }
-  }
-}
-
-function renderList() {
+function buildCards(targetId) {
   var confirmed = DATA[cur].confirmed;
   var unconfirmed = DATA[cur].unconfirmed;
   var html = '';
-
   confirmed.forEach(function(p) {
     var esc = p.name.replace(/"/g,'&quot;');
     var nEsc = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    html += '<div class="card" data-name="' + esc + '" data-lat="' + p.lat + '" data-lng="' + p.lng + '" onclick="toggleCard(\'' + nEsc + '\')">';
-    html += '<div class="card-head"><div><div class="card-name">' + p.name + '</div>';
+    html += '<div class="card" data-name="'+esc+'" data-lat="'+p.lat+'" data-lng="'+p.lng+'" data-target="'+targetId+'" onclick="toggleCard(\''+nEsc+'\',false,\''+targetId+'\')">';
+    html += '<div class="card-head"><div class="card-left"><div class="card-name">'+p.name+'</div>';
     html += '<div class="card-dot-row"><span class="dot-green"></span><span class="card-sub">위치 확인</span></div></div>';
     html += '<span class="card-arrow">▾</span></div>';
     html += '<div class="card-body">';
-    html += '<div class="info-row"><span class="info-label">주소</span><span class="info-val">' + p.addr + '</span></div>';
-    html += '<div class="info-row"><span class="info-label">운영시간</span><span class="info-val">' + p.hours + '</span></div>';
-    html += '<div class="info-row"><span class="info-label">대표메뉴</span><span class="info-val">' + p.menu + '</span></div>';
-    html += '<a class="naver-btn" onclick="event.stopPropagation();naverSearch(\'' + nEsc + '\')">네이버에서 상세 보기 ↗</a>';
+    html += '<div class="info-row"><span class="info-label">주소</span><span class="info-val">'+p.addr+'</span></div>';
+    html += '<div class="info-row"><span class="info-label">운영시간</span><span class="info-val">'+p.hours+'</span></div>';
+    html += '<div class="info-row"><span class="info-label">대표메뉴</span><span class="info-val">'+p.menu+'</span></div>';
+    html += '<a class="naver-btn" onclick="event.stopPropagation();naverSearch(\''+nEsc+'\')">네이버에서 상세 보기 ↗</a>';
     html += '</div></div>';
   });
-
   unconfirmed.forEach(function(n) {
-    var nEsc = n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     var esc = n.replace(/"/g,'&quot;');
-    html += '<div class="card" data-name="' + esc + '" onclick="toggleUnconfirmed(this)">';
-    html += '<div class="card-head"><div><div class="card-name">' + n + '</div>';
+    var nEsc = n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html += '<div class="card" data-name="'+esc+'" data-target="'+targetId+'" onclick="toggleGray(this)">';
+    html += '<div class="card-head"><div class="card-left"><div class="card-name">'+n+'</div>';
     html += '<div class="card-dot-row"><span class="dot-gray"></span><span class="card-sub">위치 미확인</span></div></div>';
     html += '<span class="card-arrow">▾</span></div>';
     html += '<div class="card-body">';
     html += '<p class="preparing">정보 준비 중이에요.</p>';
-    html += '<a class="naver-btn" onclick="event.stopPropagation();naverSearch(\'' + nEsc + '\')">네이버에서 검색하기 ↗</a>';
+    html += '<a class="naver-btn" onclick="event.stopPropagation();naverSearch(\''+nEsc+'\')">네이버에서 검색하기 ↗</a>';
     html += '</div></div>';
   });
-
-  document.getElementById('listPanel').innerHTML = html;
+  return html;
 }
 
-function toggleUnconfirmed(el) {
+function renderList() {
+  document.getElementById('list-desktop').innerHTML = buildCards('desktop');
+  document.getElementById('list-mobile').innerHTML = buildCards('mobile');
+}
+
+function toggleCard(name, fromMarker, target) {
+  var selector = '[data-name="'+name.replace(/"/g,'&quot;')+'"]';
+  var els = document.querySelectorAll(selector);
+  els.forEach(function(el) {
+    var isOpen = el.classList.contains('open');
+    document.querySelectorAll('.card.open').forEach(function(c){ c.classList.remove('open','active'); });
+    if (!isOpen) {
+      el.classList.add('open','active');
+      el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+    }
+  });
+  if (!fromMarker) {
+    var refEl = document.querySelector(selector);
+    if (refEl) {
+      var lat = refEl.getAttribute('data-lat');
+      var lng = refEl.getAttribute('data-lng');
+      if (lat && lng) { map.setCenter(new kakao.maps.LatLng(parseFloat(lat), parseFloat(lng))); map.setLevel(3); }
+    }
+  }
+  if (fromMarker && isMobile && sheet.offsetHeight < 200) setSheetH(sheetMidH);
+}
+
+function toggleGray(el) {
   var isOpen = el.classList.contains('open');
-  document.querySelectorAll('.card.open').forEach(function(c) { c.classList.remove('open','active'); });
+  document.querySelectorAll('.card.open').forEach(function(c){ c.classList.remove('open','active'); });
   if (!isOpen) el.classList.add('open','active');
 }
 
 function renderTabs() {
-  var el = document.getElementById('tabs');
-  el.innerHTML = '';
-  cats.forEach(function(c) {
-    var b = document.createElement('button');
-    b.className = 'tab' + (c === cur ? ' active' : '');
-    b.textContent = c;
-    b.onclick = function() {
-      cur = c;
-      document.querySelectorAll('.card.open').forEach(function(card) { card.classList.remove('open','active'); });
-      renderTabs();
-      renderList();
-      renderMarkers();
-    };
-    el.appendChild(b);
+  ['tabs-desktop','tabs-mobile'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.innerHTML = '';
+    cats.forEach(function(c) {
+      var b = document.createElement('button');
+      b.className = 'tab' + (c===cur?' active':'');
+      b.textContent = c;
+      b.onclick = function() {
+        cur = c;
+        document.querySelectorAll('.card.open').forEach(function(card){ card.classList.remove('open','active'); });
+        renderTabs(); renderList(); renderMarkers();
+      };
+      el.appendChild(b);
+    });
   });
 }
 
